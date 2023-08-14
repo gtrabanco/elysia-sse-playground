@@ -4,7 +4,7 @@
   <head>
     <title>SSE Timestamp with BroadcastChannel</title>
     <script>
-      let ts;
+      let ts, btn;
       const source = new EventSource('/stream-worker');
       source.addEventListener('timestamp', (event) => {
         console.log('Received timestamp event', event)
@@ -36,6 +36,11 @@
       window.addEventListener('load', (event) => {
         console.log('Load', event)
         ts = document.getElementById('timestamps');
+        btn = document.querySelector('button');
+        btn.addEventListener('click', (event) => {
+          console.log('Close connection', event)
+          source.close();
+        });
       })
 
       window.addEventListener("beforeunload", () => {
@@ -49,6 +54,7 @@
   <body>
     <h1>Timestamps</h1>
     <pre id="timestamps"></pre>
+    <button>Close Server Event Connection</button>
   </body>
 
 </html>
