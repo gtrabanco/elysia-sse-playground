@@ -1,5 +1,5 @@
 import { Context } from "elysia";
-import { sseEmitter } from "../sse-bc";
+import { sseEmitter } from "../sse-broadcast-channel";
 
 function myWorker() {
   const bc = new BroadcastChannel('bbc');
@@ -18,6 +18,6 @@ function myWorker() {
 }
 
 export function bbc(ctx: Context) {
-  
+
   return () => { }
 }

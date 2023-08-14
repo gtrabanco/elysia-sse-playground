@@ -60,8 +60,8 @@ export const sseSubscribe = (req: Request, channel: string | Array<string>, opti
       function closeConnection(reason: string | undefined = 'reason unknown') {
         return () => {
           info(`unsubscribing from channel '${channel}': ${reason}`);
-          channelUnsubscribe(Array.isArray(channel) ? channel : [channel], handler);
           options.onClose?.();
+          channelUnsubscribe(Array.isArray(channel) ? channel : [channel], handler);
           controller.close();
         }
       }

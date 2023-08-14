@@ -38,10 +38,11 @@ export const sseSubscribe = (req: Request, channel: string, options: Partial<SSE
 
       const handler = async (payload: SSEEvent): Promise<void> => {
         const { event = undefined, data = undefined } = payload as Record<string, unknown>;
+        await controller.write(`id:${id}\n`)
         if (event !== undefined) {
           await controller.write(`event:${event}\n`);
         }
-        await controller.write(`id:${id}\n`)
+        console.log('emitting data', `data:${data !== undefined ? JSON.stringify(data) : ''}`)
         await controller.write(`data:${data !== undefined ? JSON.stringify(data) : ''}\n\n`);
         await controller.flush();
         id++;
