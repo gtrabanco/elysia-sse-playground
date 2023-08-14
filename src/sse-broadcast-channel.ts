@@ -1,12 +1,16 @@
+// Temporary fix because BroadcastChannel has no types in bun-types
+type BroadcastChannel = any;
+type BroadcastChannelEvent = {
+  type: 'message' | 'messageerror';
+  data: SSEEvent;
+}
+
 export type SSEEvent = {
   event?: string;
   data?: unknown;
 }
 
-type BroadcastChannelEvent = {
-  type: 'message' | 'messageerror';
-  data: SSEEvent;
-}
+
 
 export type SSEOptions = {
   retry: number;
