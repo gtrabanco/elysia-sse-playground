@@ -1,6 +1,9 @@
 import { Worker } from "node:worker_threads";
 
-export function setupWorker(fn: () => any) {
+export function runWorker(fn: Function, workerOpts: WorkerOptions = {
+  ref: true,
+  smol: true
+}) {
   if (!(fn instanceof Function)) {
     throw new Error('Argument must be a function');
   }
@@ -9,10 +12,7 @@ export function setupWorker(fn: () => any) {
     type: 'text/javascript',
   });
 
-  const worker = new Worker(URL.createObjectURL(fnData), {
-    ref: true,
-    smol: true
-  });
+  const worker = new Worker(URL.createObjectURL(fnData), workerOpts);
 
   return worker;
 }

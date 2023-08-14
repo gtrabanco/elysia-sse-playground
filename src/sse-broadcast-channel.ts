@@ -1,16 +1,12 @@
+import { error } from "console";
+import type { BroadcastChannelEvent } from "../types";
 // Temporary fix because BroadcastChannel has no types in bun-types
-type BroadcastChannel = any;
-type BroadcastChannelEvent = {
-  type: 'message' | 'messageerror';
-  data: SSEEvent;
-}
+export type BroadcastChannel = any;
 
 export type SSEEvent = {
   event?: string;
   data?: unknown;
 }
-
-
 
 export type SSEOptions = {
   retry: number;
@@ -27,8 +23,10 @@ function debug(...args: unknown[]): void {
   console.debug(...args);
 }
 
-
-export const sseSubscribe = (req: Request, channel: string, options: Partial<SSEOptions> = {
+// Important if you want to create unique streams for each request
+// Your should use unique channel name for each request. Important if you provide live data from different sources or unique for each user or group of users.
+// Otherwise you will get a single stream for all requests. Useful to provide live data from a common single place.
+export const sseBCSubscribe = (req: Request, channel: string, options: Partial<SSEOptions> = {
   retry: 1000,
   closeOnMessageError: false,
   onClose: () => { },
@@ -67,8 +65,14 @@ export const sseSubscribe = (req: Request, channel: string, options: Partial<SSE
         }
       }
 
-      bc.addEventListener('message', handler);
-      bc.addEventListener('messageerror', closeConnection('Message error'));
+      bc.addEventListener('message', (event: BroadcastChannelEvent) => {
+        debug(`emitting to channel '${channel}'`);
+        handler(event);
+      });
+      bc.addEventListener('messageerror', (event: BroadcastChannelEvent) => {
+        error(`message error on channel '${channel}'`);
+        closeConnection('Message error')
+      });
 
       req.signal.addEventListener('abort', closeConnection('Connection aborted'));
 
@@ -89,12 +93,4 @@ export const sseSubscribe = (req: Request, channel: string, options: Partial<SSE
       Connection: 'keep-alive'
     }
   });
-};
-
-export const sseEmitter = (channel: string): ((payload?: SSEEvent) => void) => {
-  const bc = new BroadcastChannel(channel);
-  return (payload?: SSEEvent) => {
-    debug(`emitting to channel '${channel}'`);
-    bc.postMessage(payload);
-  };
 };

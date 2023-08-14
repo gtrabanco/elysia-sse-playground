@@ -1,7 +1,8 @@
 import staticPlugin from "@elysiajs/static";
 import { Context, Elysia } from "elysia";
-import { sseEmitter as sseEmitBC, sseSubscribe as sseSubscribeBC } from "./sse-broadcast-channel";
+import { sseBCSubscribe } from "./sse-broadcast-channel";
 import { sseEmit, sseSubscribe } from "./sse-event-emitter";
+import { WORKER_CHANNEL_NAME } from "./sse-worker/channel";
 
 
 
@@ -10,21 +11,28 @@ const app = new Elysia()
     prefix: '',
 
   }))
-  // .get("/bcc", (ctx) => {
-  //   const bbc = bbc(ctx);
-  //   const response = sseSubscribe(ctx.request, "bbc", {
-  //     onClose: () => {
-  //       bbc?.();
-  //     }
-  //   });
-  //   return response;
-  // })
+  .get("/stream-worker", (ctx: Context) => {
+    const { request } = ctx;
+    // const worker = runWorkerAsSingleton(myWorker);
+    const worker = new Worker(new URL('./sse-worker/my-worker.ts', import.meta.url));
+    worker.postMessage({ payload: 'hello' });
+    const response = sseBCSubscribe(request, WORKER_CHANNEL_NAME, {
+      onClose: () => {
+        worker.terminate();
+      }
+    })
+
+    return response;
+  })
   .get("/stream-bc", (ctx: Context) => {
     const req = ctx.request;
-    const tser = sseEmitBC("timestamp");
+    const bc = new BroadcastChannel("timestamp");
+    bc.addEventListener('close', () => {
+      console.log('close')
+    })
 
     const int1 = setInterval(() => {
-      tser({
+      bc.postMessage({
         event: "timestamp",
         data: Date.now()
       });
@@ -32,16 +40,17 @@ const app = new Elysia()
 
 
     const int2 = setInterval(() => {
-      tser({
+      bc.postMessage({
         event: "title",
         data: 'A new title ' + Date.now().toString().substring(7)
       });
     }, 5000);
 
-    const response = sseSubscribeBC(req, "timestamp", {
+    const response = sseBCSubscribe(req, "timestamp", {
       onClose: () => {
         clearInterval(int1);
         clearInterval(int2);
+        bc.close()
       }
     });
     return response;
