@@ -2,10 +2,10 @@
 <html>
 
   <head>
-    <title>SSE Timestamp</title>
+    <title>SSE Timestamp with BroadcastChannel</title>
     <script>
       let ts;
-      const source = new EventSource('/stream');
+      const source = new EventSource('/stream-bc');
       source.addEventListener('timestamp', (event) => {
         console.log('Received timestamp event', event)
         const timestamp = JSON.parse(event.data);

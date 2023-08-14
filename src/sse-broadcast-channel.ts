@@ -3,6 +3,11 @@ export type SSEEvent = {
   data?: unknown;
 }
 
+type BroadcastChannelEvent = {
+  type: 'message' | 'messageerror';
+  data: SSEEvent;
+}
+
 export type SSEOptions = {
   retry: number;
   closeOnMessageError: boolean;
@@ -36,12 +41,13 @@ export const sseSubscribe = (req: Request, channel: string, options: Partial<SSE
         await controller.write(`retry:${options.retry}\n`);
       }
 
-      const handler = async (payload: SSEEvent): Promise<void> => {
-        const { event = undefined, data = undefined } = payload as Record<string, unknown>;
-        await controller.write(`id:${id}\n`)
+      const handler = async (payload: BroadcastChannelEvent): Promise<void> => {
+        console.log('payload', payload);
+        const { event = undefined, data = undefined } = payload.data;
         if (event !== undefined) {
           await controller.write(`event:${event}\n`);
         }
+        await controller.write(`id:${id}\n`)
         console.log('emitting data', `data:${data !== undefined ? JSON.stringify(data) : ''}`)
         await controller.write(`data:${data !== undefined ? JSON.stringify(data) : ''}\n\n`);
         await controller.flush();

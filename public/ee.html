@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>SSE Timestamp with EventEmitter</title>
+    <script>
+      let ts;
+      const source = new EventSource('/stream-ee');
+      source.addEventListener('timestamp', (event) => {
+        console.log('Received timestamp event', event)
+        const timestamp = JSON.parse(event.data);
+        const date = new Date(timestamp);
+        if (ts)
+          ts.innerHTML = date.toISOString() + '\n';
+      });
+      source.addEventListener('open', (event) => {
+        console.log('Connection opened');
+      });
+
+      source.addEventListener('error', (event) => {
+        if (event.readyState == EventSource.CLOSED) {
+          console.log('Connection closed');
+        }
+      });
+
+      source.addEventListener('title', (event) => {
+        console.log('Received title event', event)
+        document.querySelector('h1').innerHTML = JSON.parse(event.data);
+        source.close();
+      });
+
+      source.addEventListener('close', (event) => {
+        console.log('Connection closed');
+      });
+
+      window.addEventListener('load', (event) => {
+        console.log('Load', event)
+        ts = document.getElementById('timestamps');
+      })
+
+      window.addEventListener("beforeunload", () => {
+        if (source.readyState !== EventSource.CLOSED) {
+          source.close();
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <h1>Timestamps</h1>
+    <pre id="timestamps"></pre>
+  </body>
+
+</html>

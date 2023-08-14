@@ -46,7 +46,7 @@ const app = new Elysia()
     });
     return response;
   })
-  .get("/stream", (ctx: Context) => {
+  .get("/stream-ee", (ctx: Context) => {
     const req = ctx.request;
 
     const int1 = setInterval(() => {
