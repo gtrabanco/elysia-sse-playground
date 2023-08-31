@@ -1,5 +1,6 @@
 import staticPlugin from "@elysiajs/static";
 import { Context, Elysia } from "elysia";
+import { join } from "node:path";
 import { sseBCSubscribe } from "./sse-broadcast-channel";
 import { sseEmit, sseSubscribe } from "./sse-event-emitter";
 import { WORKER_CHANNEL_NAME } from "./sse-worker/channel";
@@ -11,6 +12,31 @@ const app = new Elysia()
     prefix: '',
 
   }))
+  .get("static-file.html", () => {
+    const rw = new HTMLRewriter();
+    rw.on("h1", {
+      element: (element) => {
+        // element.append(" with something more", { html: false });
+        // element.replace("<h1>Another title</h1>", { html: true });
+        element.setInnerContent("Inner title");
+      },
+      // text: (text) => {
+      //   const trimmed = text.text.trim();
+      //   if (trimmed.length > 0)
+      //     text.replace("Another new title", {
+      //       html: true,
+      //     });
+      // },
+    });
+    const file = Bun.file(join("public", "static-file.html"));
+    return rw.transform(
+      new Response(file, {
+        headers: new Headers({
+          accept: "text/html",
+        }),
+      }),
+    );
+  })
   .get("/stream-worker", (ctx: Context) => {
     const { request } = ctx;
     // const worker = runWorkerAsSingleton(myWorker);
